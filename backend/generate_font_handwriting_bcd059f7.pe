@@ -1,0 +1,9 @@
+#!/usr/bin/env fontforge
+New();
+SetFontNames("handwriting_bcd059f7", "handwriting_bcd059f7", "handwriting_bcd059f7", "Regular", "Generated Handwriting", "d4e7c0f7c1e14bfeb7d9cf5b76507fee");
+Select(Unicode(48));
+Import("uploads/3bc76657-113e-4fce-b76c-ec5528d19f0c/letters/0.svg");
+RemoveOverlap();
+Simplify();
+Generate("fonts/handwriting_bcd059f7.ttf");
+Quit(0);

@@ -1,0 +1,9 @@
+#!/usr/bin/env fontforge
+New();
+SetFontNames("handwriting_842d9f02", "handwriting_842d9f02", "handwriting_842d9f02", "Regular", "Generated Handwriting", "20558e6525184434bbdded3f44f1a8d8");
+Select(Unicode(48));
+Import("uploads/c879c0f5-3ce7-4544-a0f4-d896ab5ad3a5/letters/0.svg");
+RemoveOverlap();
+Simplify();
+Generate("fonts/handwriting_842d9f02.ttf");
+Quit(0);
