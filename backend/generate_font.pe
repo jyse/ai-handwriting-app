@@ -1,0 +1,4 @@
+#!/usr/bin/env fontforge
+New();
+Generate("fonts/handwriting_font.ttf");
+Quit(0);
