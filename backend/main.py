@@ -22,6 +22,7 @@ os.makedirs("fonts", exist_ok=True)
 try:
     app.mount("/static", StaticFiles(directory="static"), name="static")
     templates = Jinja2Templates(directory="templates")
+    app.mount("/fonts", StaticFiles(directory="fonts"), name="fonts")
 except Exception as e:
     print(f"Warning: Static files or templates setup issue: {e}")
 
