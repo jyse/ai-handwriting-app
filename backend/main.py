@@ -296,6 +296,7 @@ def extract_letters(image_path, output_dir):
 
 def extract_letters_from_grid(image_path, output_dir):
     """Alternative approach to extract letters using explicit grid detection."""
+    print("[INFO] Trying improved grid detection approach...")
     # Load image
     image = cv2.imread(image_path)
     if image is None:
@@ -304,8 +305,11 @@ def extract_letters_from_grid(image_path, output_dir):
     # Convert to grayscale
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     
-    # Threshold
-    _, thresh = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY_INV)
+    # Apply a slight blur to reduce noise
+    gray_blurred = cv2.GaussianBlur(gray, (3, 3), 0)
+
+    # Threshold more aggressively to separate content from grid
+    _, thresh = cv2.threshold(gray_blurred, 180, 255, cv2.THRESH_BINARY_INV)
     
     # Define a character mapping for lowercase and uppercase letters
     char_mapping = {}
@@ -356,6 +360,10 @@ def extract_letters_from_grid(image_path, output_dir):
     
     letter_files = []
     letter_count = 0
+
+    # Create debug directory
+    debug_dir = os.path.join(output_dir, "debug")
+    os.makedirs(debug_dir, exist_ok=True)
     
     # Process each cell in the grid
     for i in range(len(h_lines)-1):
@@ -365,33 +373,70 @@ def extract_letters_from_grid(image_path, output_dir):
             cell_width = v_lines[j+1] - v_lines[j]
             cell_height = h_lines[i+1] - h_lines[i]
             
-            # Extract cell content with margin
-            margin = 5
-            cell = thresh[
-                cell_y + margin:cell_y + cell_height - margin, 
-                cell_x + margin:cell_x + cell_width - margin
-            ]
+            # Extract cell content with larger margin to avoid grid lines
+            margin = 10
             
-            # Skip empty cells
-            if cell.size == 0 or np.sum(cell) < 500:
+            # Ensure margins are within image bounds
+            y_start = max(0, cell_y + margin)
+            y_end = min(gray.shape[0], cell_y + cell_height - margin)
+            x_start = max(0, cell_x + margin)
+            x_end = min(gray.shape[1], cell_x + cell_width - margin)
+            
+            # Extract the cell region from the original grayscale image
+            cell_gray = gray[y_start:y_end, x_start:x_end]
+            
+            # Skip if cell is too small
+            if cell_gray.size == 0:
                 continue
-                
+            
+            # Apply adaptive thresholding to better handle varying lighting
+            cell_binary = cv2.adaptiveThreshold(
+                cell_gray, 
+                255, 
+                cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
+                cv2.THRESH_BINARY_INV, 
+                15, 
+                9
+            )
+            
+            # Apply morphological operations to remove noise and thin lines
+            kernel = np.ones((2, 2), np.uint8)
+            cell_cleaned = cv2.morphologyEx(cell_binary, cv2.MORPH_OPEN, kernel)
+            
+            # Dilate to make the letters more prominent
+            cell_dilated = cv2.dilate(cell_cleaned, kernel, iterations=1)
+            
+            # Skip empty cells (no significant black pixels)
+            if np.sum(cell_dilated) < 500:
+                continue
+
             # Assign the correct character based on grid position
             if letter_count < len(char_mapping):
                 char = char_mapping[letter_count]
+                char_code = ord(char)
+                
+                # Save processed cell as a letter PNG
+                letter_filename = os.path.join(output_dir, f"letter_{char_code}.png")
+                
+                # Save letter image
+                if cv2.imwrite(letter_filename, cell_dilated):
+                    letter_files.append(letter_filename)
+                    print(f"[INFO] Saved grid cell letter '{char}' at {letter_filename}")
+                    
+                    # Save debug images
+                    cv2.imwrite(os.path.join(debug_dir, f"gray_{char}.png"), cell_gray)
+                    cv2.imwrite(os.path.join(debug_dir, f"binary_{char}.png"), cell_binary)
+                    cv2.imwrite(os.path.join(debug_dir, f"final_{char}.png"), cell_dilated)
             else:
-                char = f"_{letter_count}"
-            
-            # Save cell as a letter PNG
-            letter_filename = os.path.join(output_dir, f"letter_{ord(char)}.png")
-            
-            # Save letter image
-            if cv2.imwrite(letter_filename, cell):
-                letter_files.append(letter_filename)
-                print(f"[INFO] Saved grid cell letter '{char}' at {letter_filename}")
+                # For extra letters beyond our mapping, use numerical naming
+                letter_filename = os.path.join(output_dir, f"letter_extra_{letter_count}.png")
+                if cv2.imwrite(letter_filename, cell_dilated):
+                    letter_files.append(letter_filename)
+                    print(f"[INFO] Saved extra grid cell at {letter_filename}")
             
             letter_count += 1
     
+    print(f"[INFO] Grid extraction extracted {len(letter_files)} letters")
     return letter_files
 
 def convert_png_to_svg(input_dir, output_dir):
@@ -516,39 +561,60 @@ def generate_font(text, letters_dir):
     svg_letters = [f for f in os.listdir(letters_dir) if f.endswith(".svg")]
     png_letters = [f for f in os.listdir(letters_dir) if f.endswith(".png")]
     
-    print(f"[INFO] Found {len(svg_letters)} SVG and {len(png_letters)} PNG letters")
+    # Get a unique list of letter codes from filename patterns (letter_XX.png or letter_XX.svg)
+    letter_codes = set()
+    for filename in os.listdir(letters_dir):
+        if filename.startswith("letter_") and (filename.endswith(".png") or filename.endswith(".svg")):
+            try:
+                # Extract the number part from filenames like letter_97.png
+                code_part = filename.split("_")[1].split(".")[0]
+                if code_part.isdigit():  # Make sure it's a valid integer
+                    letter_codes.add(int(code_part))
+            except (IndexError, ValueError):
+                continue
     
+    print(f"[INFO] Found {len(svg_letters)} SVG and {len(png_letters)} PNG letters")
+    print(f"[INFO] Found {len(letter_codes)} unique character codes") 
+
     # Create FontForge script
     with open(script_path, "w") as f:
         f.write("#!/usr/bin/env fontforge\n")
         f.write("New();\n")
         f.write(f"SetFontNames('{font_name}', 'Handwriting', 'Regular');\n")
         
-        # Try to map characters to files
+        # Counter for mapped chars
         chars_mapped = 0
 
-        # First check if we have direct character-named files (from grid extraction)
-        alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        for char in alphabet:
-            char_code = ord(char)
+        # Map each detected character code to its corresponding letter file
+        for code in letter_codes:
+            # Check for SVG first (preferred)
+            svg_file = os.path.join(letters_dir, f"letter_{code}.svg")
+            png_file = os.path.join(letters_dir, f"letter_{code}.png")
             
-            # Try character-specific files first (from grid extraction)
-            svg_file = os.path.join(letters_dir, f"letter_{char_code}.svg")
-            png_file = os.path.join(letters_dir, f"letter_{char_code}.png")
-            
+            letter_file = None
             if os.path.exists(svg_file):
-                f.write(f'Select({char_code});\n')
-                f.write(f'Import("{svg_file}");\n')
-                chars_mapped += 1
-                print(f"[INFO] Mapped character '{char}' to {svg_file}")
+                letter_file = svg_file
             elif os.path.exists(png_file):
-                f.write(f'Select({char_code});\n')
-                f.write(f'Import("{png_file}");\n')
+                letter_file = png_file
+                
+            if letter_file:
+                f.write(f'Select({code});\n')
+                f.write(f'Import("{letter_file}");\n')
+                
+                # Set reasonable bounds for the character
+                f.write('RemoveOverlap();\n')
+                f.write('Simplify();\n')
+                f.write('CorrectDirection();\n')
                 chars_mapped += 1
-                print(f"[INFO] Mapped character '{char}' to {png_file}")
+                try:
+                    char = chr(code)
+                    print(f"[INFO] Mapped character '{char}' (code {code}) to {letter_file}")
+                except ValueError:
+                    print(f"[INFO] Mapped character code {code} to {letter_file}")
         
         # If we don't have any character-named files, fall back to numbered files
         if chars_mapped == 0:
+            print("[WARNING] No character files found. Falling back to numbered files.")
             for i, char in enumerate(text):
                 if i >= 52:  # Only use the first 52 characters (a-zA-Z)
                     break
@@ -562,16 +628,27 @@ def generate_font(text, letters_dir):
                 if os.path.exists(svg_file):
                     f.write(f'Select({char_code});\n')
                     f.write(f'Import("{svg_file}");\n')
+                    f.write('RemoveOverlap();\n')
+                    f.write('Simplify();\n')
+                    f.write('CorrectDirection();\n')
+                    f.write('Center();\n')
                     chars_mapped += 1
                     print(f"[INFO] Mapped character '{char}' to {svg_file}")
                 elif os.path.exists(png_file):
                     f.write(f'Select({char_code});\n')
                     f.write(f'Import("{png_file}");\n')
+                    f.write('RemoveOverlap();\n')
+                    f.write('Simplify();\n')
+                    f.write('CorrectDirection();\n')
+                    f.write('Center();\n')
                     chars_mapped += 1
                     print(f"[INFO] Mapped character '{char}' to {png_file}")
 
         # Generate if we have any characters mapped
-        if chars_mapped > 0:
+        if chars_mapped > 0:            
+            # Set some basic font metrics
+            f.write('SetOS2Value("Weight", 400);\n')  # Regular weight
+            f.write('SetOS2Value("Width", 5);\n')     # Medium width
             f.write(f'Generate("{font_path}");\n')
         f.write('Quit(0);\n')
     
@@ -603,3 +680,94 @@ def generate_font(text, letters_dir):
         if e.stderr:
             print(f"Details: {e.stderr.decode()}")
         return {"status": "fontforge_error", "error": str(e), "letter_dir": letters_dir}
+
+@app.get("/debug/{session_id}")
+async def debug_letters(request: Request, session_id: str):
+    """Debug endpoint to view extracted letters"""
+    letters_dir = f"uploads/{session_id}/letters"
+    
+    if not os.path.exists(letters_dir):
+        return HTMLResponse(content="Session not found or letters not extracted.")
+    
+    # Find all letter files
+    file_infos = []
+    for filename in sorted(os.listdir(letters_dir)):
+        if filename.startswith("letter_") and (filename.endswith(".png") or filename.endswith(".svg")):
+            try:
+                code_part = filename.split("_")[1].split(".")[0]
+                if code_part.isdigit():
+                    code = int(code_part)
+                    try:
+                        char = chr(code)
+                        file_infos.append({
+                            "path": f"/uploads/{session_id}/letters/{filename}",
+                            "code": code,
+                            "char": char,
+                            "filename": filename
+                        })
+                    except ValueError:
+                        file_infos.append({
+                            "path": f"/uploads/{session_id}/letters/{filename}", 
+                            "code": code,
+                            "char": "?",
+                            "filename": filename
+                        })
+            except (IndexError, ValueError):
+                pass
+    
+    # Sort by character code
+    file_infos.sort(key=lambda x: x["code"])
+    
+    html_content = f"""
+    <html>
+        <head>
+            <title>Letter Extraction Debug</title>
+            <style>
+                body {{ font-family: Arial, sans-serif; margin: 20px; }}
+                .letter-grid {{ display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }}
+                .letter-cell {{ 
+                    border: 1px solid #ccc; 
+                    padding: 10px; 
+                    display: flex; 
+                    flex-direction: column; 
+                    align-items: center;
+                    background-color: #f9f9f9;
+                }}
+                .letter-image {{ 
+                    width: 100px; 
+                    height: 100px; 
+                    background-color: white;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }}
+                .letter-info {{ text-align: center; margin-top: 5px; }}
+                h1, h2 {{ color: #333; }}
+            </style>
+        </head>
+        <body>
+            <h1>Letter Extraction Debug</h1>
+            <p>Session ID: {session_id}</p>
+            <h2>Extracted Letters ({len(file_infos)})</h2>
+            <div class="letter-grid">
+    """
+    
+    for info in file_infos:
+        html_content += f"""
+                <div class="letter-cell">
+                    <div class="letter-image">
+                        <img src="{info['path']}" style="max-width: 100%; max-height: 100%;">
+                    </div>
+                    <div class="letter-info">
+                        <strong>'{info['char']}'</strong> (Code: {info['code']})
+                    </div>
+                </div>
+        """
+    
+    html_content += """
+            </div>
+        </body>
+    </html>
+    """
+    
+    return HTMLResponse(content=html_content)
