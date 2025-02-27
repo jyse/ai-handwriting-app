@@ -2,10 +2,12 @@ import os
 from fastapi import APIRouter, File, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
 from app.utils.processing import process_image, recognize_handwriting
-from app.utils.file_handling import save_uploaded_file  # ✅ Import file handling
-from app.utils.font_generation import generate_font  # ✅ Import font generation
+from app.utils.file_handling import save_uploaded_file
+from app.utils.font_generation import generate_font  
 from app.utils.processing import extract_letters
-from app.utils.processing import fine_tune_model  # ✅ Import fine-tuning
+from app.utils.processing import fine_tune_model  
+from app.utils.processing import convert_png_to_svg  
+from PIL import Image
 
 router = APIRouter()
 UPLOAD_DIR = "uploads"
@@ -20,21 +22,34 @@ async def upload_image(file: UploadFile = File(...)):
 
         # Step 2: Process image and recognize handwriting
         image = process_image(file_path)
-        extracted_letters = extract_letters(file_path, user_letters_dir) 
+
+        # ✅ Save processed image to disk before passing it to extract_letters
+        processed_image_path = os.path.join(UPLOAD_DIR, session_id, "processed_image.png")
+        image.save(processed_image_path)  
+
+        # Now pass the processed image file path to extract_letters
+        extracted_letters = extract_letters(processed_image_path, user_letters_dir)
+        print(f"🐲Extracted letters list: {extracted_letters}")
 
         if not extracted_letters: 
             raise Exception("No letters were extracted from handwriting image")
         
         # Step 3: Recognize handwriting text
-        recognized_text = recognize_handwriting(image)
-        print(f"🔠 Recognized text: {recognized_text}")  # ✅ Debugging
+        recognized_texts = recognize_handwriting(extracted_letters)
+        print(f"🔠 Recognized text: {recognized_texts}")  # ✅ Debugging
+
+        # 🛠 Convert extracted letter paths to images
+        letter_images = [Image.open(letter_file).convert("RGB") for letter_file in extracted_letters]
 
         # Step 4: Fine-Tune the Model on the User's handwriting
-        fine_tune_result = fine_tune_model(image, recognized_text)
+        fine_tune_result = fine_tune_model(letter_images, recognized_texts)
         print(f"🤖 Fine-Tuning Result: {fine_tune_result}")
 
+        # Convert extracted PNG letters to SVG before generating font
+        convert_png_to_svg(user_letters_dir, user_letters_dir)
+
         # Step 5: Generate font from extracted letters
-        font_path = generate_font(recognized_text, user_letters_dir)
+        font_path = generate_font(recognized_texts, user_letters_dir)
         print(f"🎨 Generated font path: {font_path}")  # ✅ Debugging
 
         # If font generation fails, return an error

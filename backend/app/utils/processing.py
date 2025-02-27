@@ -4,6 +4,7 @@ import numpy as np
 import torch
 from transformers import TrOCRProcessor, VisionEncoderDecoderModel
 from PIL import Image, ImageOps, ImageEnhance
+import subprocess
 
 # Try to load OCR (pre-trained) OCR model
 try:
@@ -16,28 +17,49 @@ except Exception as e:
     print("[INFO] Will use fallback alphabet instead of OCR")
     model_loaded = False
 
-# Preprocessing the image for OCR Model
-def process_image(image_path): 
-    """Preprocess the image for OCR"""
-    image = Image.open(image_path).convert("RGB")
-    image = ImageOps.grayscale(image)
-    enhancer = ImageEnhance.Contrast(image)
-    image = enhancer.enhance(3.0)
-    return image.convert("RGB")  # Ensure 3-channel image for OCR
-
-# OCR Model recognizing handwriting image to alphabet
-def recognize_handwriting(image):
-    """Perform OCR on handwriting"""
-    if not model_loaded:
-        return "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    
-    try:
+def ocr_model(image):
+    """Perform OCR on an image using TrOCR"""
+    try: 
         inputs = processor(image, return_tensors="pt")
         generated_text = model.generate(**inputs)
         return processor.batch_decode(generated_text, skip_special_tokens=True)[0].strip()
+    except Exception as e: 
+        print(f"[ERROR] ❌ OCR model error: {e}")
+        return "?" # Return "?" if OCR fails
+
+# Preprocessing the image for OCR Model
+def process_image(image_path): 
+    """Preprocess the image for OCR"""
+    try: 
+        image = Image.open(image_path).convert("RGB")
+        image = ImageOps.grayscale(image)
+        enhancer = ImageEnhance.Contrast(image)
+        image = enhancer.enhance(3.0)
+        return image.convert("RGB")  # Ensure 3-channel image for OCR
     except Exception as e:
-        print(f"[WARNING] OCR failed: {e}")
-        return ""
+        print(f"[ERROR] ❌ Image processing error: {e}")
+        return None # Return None if processing fails
+
+# OCR Model recognizing handwriting image to alphabet
+def recognize_handwriting(letter_files):
+    """Perform OCR on extracted letter images and map them to characters"""
+    if not model_loaded:
+        return "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    
+    recognized_chars = []  # This should be the list used
+    for letter_file in letter_files:
+        try:
+            processed_image = process_image(letter_file) 
+            if processed_image:                 
+                text = ocr_model(processed_image)  # Assuming ocr_model() expects an image object
+                recognized_chars.append(text)  # ✅ Append to recognized_chars instead
+            else: 
+                recognized_chars.append("?") # Handle failed processing
+        except Exception as e:
+                print(f"[WARNING] OCR failed for a letter: {e}")
+                recognized_chars.append("?")  # Use '?' for unrecognized letters
+    
+    return recognized_chars
 
 # Letter Extrations Functions
 def extract_letters(image_path, output_dir):
@@ -334,9 +356,9 @@ def convert_png_to_svg(input_dir, output_dir):
 
     print("[SUCCESS] ✅ SVG conversion completed!")
 
-def fine_tune_model(image, text):
+def fine_tune_model(images, texts):
     """Fine-tune the OCR model on the user's handwriting"""
-    if not model_loaded or not text.strip():
+    if not model_loaded or not texts:
         print("[INFO] Skipping fine-tuning (model not loaded or text empty)")
         return {"status": "skipped"}
 
@@ -346,32 +368,16 @@ def fine_tune_model(image, text):
         # Step 1: Set up optimizer
         optimizer = torch.optim.Adam(model.parameters(), lr=5e-5)
 
-        # Step 2: Prepare inputs for model
-        inputs = processor(image, return_tensors="pt")
-        labels = processor.tokenizer(text, return_tensors="pt").input_ids
+        for img, text in zip(images, texts):
+            inputs = processor(img, return_tensors="pt")
+            labels = processor.tokenizer(text, return_tensors="pt").input_ids
 
-        # Step 3: Ensure decoder and pad token IDs are set correctly
-        if model.config.decoder_start_token_id is None:
-            model.config.decoder_start_token_id = (
-                processor.tokenizer.cls_token_id
-                if hasattr(processor.tokenizer, "cls_token_id")
-                else processor.tokenizer.bos_token_id  # Use `bos_token_id` as fallback
-            )
+            outputs = model(**inputs, labels=labels)
+            loss = outputs.loss
 
-        if model.config.pad_token_id is None:
-            if hasattr(processor.tokenizer, "pad_token_id") and processor.tokenizer.pad_token_id is not None:
-                model.config.pad_token_id = processor.tokenizer.pad_token_id
-            else:
-                print("[WARNING] ⚠️ `pad_token_id` is missing! Fine-tuning may not work correctly.")
+            loss.backward()
+            optimizer.step()
 
-        # Step 4: Compute loss and optimize model
-        optimizer.zero_grad()  # Clear previous gradients
-        outputs = model(**inputs, labels=labels)
-        loss = outputs.loss
-        loss.backward()
-        optimizer.step()  # Apply gradients
-
-        # Step 5: Return training stats
         stats = {
             "status": "success",
             "loss": float(loss.item()),
@@ -380,7 +386,7 @@ def fine_tune_model(image, text):
         }
 
         print(f"[SUCCESS] 🏆 Fine-tuning completed successfully! Loss: {loss.item():.4f}")
-        return stats
+        return {"stats": stats}
 
     except Exception as e:
         # Free up memory in case of failure

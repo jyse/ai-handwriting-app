@@ -46,29 +46,20 @@ export default function Home() {
     formData.append("email", email);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/upload", {
-        method: "POST",
-        body: formData
-      });
+      const response = await axios.post(
+        "http://localhost:8000/upload",
+        formData
+      );
 
-      if (!response.ok) {
-        throw new Error(
-          `Server error: ${response.status} ${response.statusText}`
-        );
+      if (!response.data.success) {
+        throw new Error(response.data.error || "Unknown error occurred");
       }
 
-      const data = await response.json();
-      console.log("🐲 FULL RESPONSE:", data);
-
-      if (!data || typeof data !== "object") {
-        throw new Error("Invalid response from backend");
-      }
-
-      if (!data.success) {
-        throw new Error(data.error || "Unknown error occurred");
-      }
-
-      setFontDownload(data.font_url);
+      setFontDownload(
+        `http://localhost:8000/download-font/${response.data.font_url
+          .split("/")
+          .pop()}`
+      );
     } catch (error) {
       console.error("👹 ERROR DETAILS:", error);
       setError(error.message || "Something went wrong. Please try again.");
@@ -140,7 +131,9 @@ export default function Home() {
 
         {fontDownload && (
           <a
-            href={fontDownload}
+            href={`http://localhost:8000/download-font/${fontDownload
+              .split("/")
+              .pop()}`}
             download="handwriting_font.ttf"
             className="mt-4 text-blue-600 underline text-center block"
           >
