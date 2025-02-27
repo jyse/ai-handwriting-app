@@ -19,13 +19,16 @@ def generate_font(recognized_chars, letters_dir):
         print("[WARNING] FontForge not found. Skipping font generation.")
         return None
 
-    # Find extracted letter images
-    letter_files = {f.split("_")[1].split(".")[0]: f for f in os.listdir(letters_dir) if f.startswith("letter_")}
+    # Find extracted letter files
+    letter_files = [f for f in os.listdir(letters_dir) if f.startswith("letter_") and (f.endswith(".svg") or f.endswith(".png"))]
     print(f"[INFO] Found {len(letter_files)} extracted letters in {letters_dir}")
 
     if not letter_files:
         print("[ERROR] No extracted letters found. Cannot generate font.")
         return None
+
+    # Sort files by index to ensure correct order
+    sorted_files = sorted(letter_files, key=lambda f: int(f.split("_")[1].split(".")[0]))
 
     # Generate FontForge script
     with open(script_path, "w") as f:
@@ -35,14 +38,13 @@ def generate_font(recognized_chars, letters_dir):
 
         mapped_chars = 0
 
-        for char, code in zip(recognized_chars, range(65, 65 + len(recognized_chars))):  # Start at 'A' (ASCII 65)
-            letter_file = letter_files.get(str(code), None)
-
-            if not letter_file:
-                print(f"[WARNING] No extracted image found for '{char}' (code {code}). Skipping.")
-                continue
-            
+        # Map sorted files to recognized characters (they should be in same order)
+        for i, (char, letter_file) in enumerate(zip(recognized_chars, sorted_files)):
             letter_path = os.path.join(letters_dir, letter_file)
+            
+            # Use ASCII value for character
+            code = ord(char) if len(char) == 1 else (65 + i)  # Fallback to A-Z range if not a single char
+            
             f.write(f'Select({code});\n')
             f.write(f'Import("{letter_path}");\n')
             f.write('RemoveOverlap();\n')

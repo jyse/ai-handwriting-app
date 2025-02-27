@@ -21,10 +21,11 @@ async def upload_image(file: UploadFile = File(...)):
         session_id, file_path = save_uploaded_file(file, UPLOAD_DIR)
         user_letters_dir = os.path.join(UPLOAD_DIR, session_id, "letters")
 
+        if not os.path.exists(file_path):
+            raise Exception(f"File was not saved correctly: {file_path}")
+
         # Step 2: Process image and recognize handwriting
         image = process_image(file_path)
-
-        # ✅ Save processed image to disk before passing it to extract_letters
         processed_image_path = os.path.join(UPLOAD_DIR, session_id, "processed_image.png")
         image.save(processed_image_path)  
 
@@ -43,8 +44,12 @@ async def upload_image(file: UploadFile = File(...)):
         letter_images = [Image.open(letter_file).convert("RGB") for letter_file in extracted_letters]
 
         # Step 4: Fine-Tune the Model on the User's handwriting
-        fine_tune_result = fine_tune_model(letter_images, recognized_texts)
-        print(f"🤖 Fine-Tuning Result: {fine_tune_result}")
+        try:
+            fine_tune_result = fine_tune_model(letter_images, recognized_texts)
+            print(f"🤖 Fine-Tuning Result: {fine_tune_result}")
+        except Exception as e:
+            print(f"⚠️ Fine-tuning failed: {e}, but continuing with font generation")
+            fine_tune_result = {"status": "error", "error": str(e)}
 
         # Convert extracted PNG letters to SVG before generating font
         convert_png_to_svg(user_letters_dir, user_letters_dir)

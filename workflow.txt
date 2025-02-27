@@ -1,0 +1,15 @@
+ The upload and save process.
+✅ Image preprocessing (grayscale, contrast enhancement, etc.).
+✅ Letter extraction (but without needing a grid function).
+✅ OCR recognition and font generation.
+
+The code flow appears to be:
+
+Upload an image with handwritten letters
+Process the image
+Extract individual letters
+Recognize each letter
+Fine-tune a model based on the handwriting
+Convert the extracted PNG letters to SVG
+Generate a font from the SVG letters
+Provide a download endpoint for the generated font
