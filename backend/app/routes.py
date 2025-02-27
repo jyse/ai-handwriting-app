@@ -8,6 +8,7 @@ from app.utils.processing import extract_letters
 from app.utils.processing import fine_tune_model  
 from app.utils.processing import convert_png_to_svg  
 from PIL import Image
+import subprocess  
 
 router = APIRouter()
 UPLOAD_DIR = "uploads"
