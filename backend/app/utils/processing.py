@@ -120,7 +120,14 @@ def extract_letters(image_path, output_dir):
 
 def convert_png_to_svg(input_dir, output_dir):
     """Convert extracted PNG letters into SVG vector files."""
+    import os
+    import subprocess
+    from PIL import Image
+
     print("[INFO] 🖼 Converting letters into vector SVGs...")
+    
+    # Ensure output directory exists
+    os.makedirs(output_dir, exist_ok=True)
     
     # Check if potrace is installed
     try:
@@ -130,13 +137,18 @@ def convert_png_to_svg(input_dir, output_dir):
         # Return without failing - we'll use PNG files instead
         return
     
+    conversion_count = 0
     for filename in os.listdir(input_dir):
         if filename.endswith(".png"):
             try:
                 img_path = os.path.join(input_dir, filename)
-                pbm_path = img_path.replace(".png", ".pbm")
+                pbm_path = os.path.join(output_dir, filename.replace(".png", ".pbm"))
                 svg_path = os.path.join(output_dir, filename.replace(".png", ".svg"))
 
+                # Skip if SVG already exists
+                if os.path.exists(svg_path):
+                    continue
+                
                 # Open image and ensure it's binary (black and white)
                 img = Image.open(img_path).convert("1")  # Convert to binary
                 
@@ -151,19 +163,18 @@ def convert_png_to_svg(input_dir, output_dir):
                     stderr=subprocess.PIPE
                 )
                 
-                # Print debugging info if needed
-                if result.stderr:
-                    print(f"[INFO] Potrace message: {result.stderr.decode()}")
-                    
-                # Clean up PBM file
-                os.remove(pbm_path)
+                conversion_count += 1
                 
+                # Clean up PBM file
+                if os.path.exists(pbm_path):
+                    os.remove(pbm_path)
+                    
             except Exception as e:
                 print(f"[WARNING] ⚠️ Failed to convert {filename} to SVG: {e}")
                 # Continue with other files
                 continue
 
-    print("[SUCCESS] ✅ SVG conversion completed!")
+    print(f"[SUCCESS] ✅ SVG conversion completed! Converted {conversion_count} files.")
 
 def fine_tune_model(images, texts):
     """Fine-tune the OCR model on the user's handwriting"""
@@ -177,6 +188,9 @@ def fine_tune_model(images, texts):
         # Fix decoder_start_token_id issue
         if not hasattr(model.config, "decoder_start_token_id") or model.config.decoder_start_token_id is None:
             model.config.decoder_start_token_id = 2  # This is the default value for the TrOCR model
+        
+        # Fix pad_token_id issue
+        model.config.pad_token_id = 1  # Set pad token ID explicitly
         
         # Step 1: Set up optimizer
         optimizer = torch.optim.Adam(model.parameters(), lr=5e-5)
