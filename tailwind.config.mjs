@@ -1,17 +1,45 @@
+import { fontFamily } from "tailwindcss/defaultTheme";
+
 /** @type {import('tailwindcss').Config} */
-export default {
-  content: [
-    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
-  ],
+const config = {
+  darkMode: "class",
+  content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
   theme: {
     extend: {
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
+        // Light Theme Tokens
+        "light-bg": "#F7F7F7",
+        "light-primary": "#17BEBB",
+        "light-secondary": "#706993",
+        "light-tertiary": "#331E38",
+        "light-text": "#331E38",
+
+        // Dark Theme Tokens
+        "dark-bg": "#191923",
+        "dark-primary": "#7D31AF",
+        "dark-secondary": "#B5BA72",
+        "dark-tertiary": "#99907D",
+        "dark-text": "#504B3F",
+
+        // Semantic Tokens (Used in app)
+        bg: "var(--color-bg)",
+        text: "var(--color-text)",
+        primary: "var(--color-primary)",
+        secondary: "var(--color-secondary)",
+        tertiary: "var(--color-tertiary)"
       },
-    },
+      fontFamily: {
+        mono: ["var(--font-fira-code)", ...fontFamily.mono],
+        heading: ["var(--font-lato)", ...fontFamily.sans],
+        body: ["var(--font-inter)", ...fontFamily.sans]
+      },
+      spacing: {
+        layout: "1.5rem",
+        gutter: "2rem"
+      }
+    }
   },
-  plugins: [],
+  plugins: []
 };
+
+export default config;

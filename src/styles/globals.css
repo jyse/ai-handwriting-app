@@ -2,14 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --primary-color: #14b8a6; /* Teal */
-  --secondary-color: #6b7280; /* Grey */
-  --dark-mode-bg: #1e293b;
-  --dark-mode-text: #e2e8f0;
-}
-
 body {
-  font-family: "Inter", sans-serif;
-  background-color: var(--primary-color);
+  @apply font-body antialiased;
 }
