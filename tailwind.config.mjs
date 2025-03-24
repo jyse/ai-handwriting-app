@@ -2,26 +2,14 @@ import { fontFamily } from "tailwindcss/defaultTheme";
 
 /** @type {import('tailwindcss').Config} */
 const config = {
+  // Enable dark mode based on the `class` on <html>
   darkMode: "class",
   content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
   theme: {
     extend: {
+      // Semantic design tokens using CSS variables
+      // These names (bg, text, primary...) are used as Tailwind classnames like `bg-bg`, `text-primary`
       colors: {
-        // Light Theme Tokens
-        "light-bg": "#F7F7F7",
-        "light-primary": "#17BEBB",
-        "light-secondary": "#706993",
-        "light-tertiary": "#331E38",
-        "light-text": "#331E38",
-
-        // Dark Theme Tokens
-        "dark-bg": "#191923",
-        "dark-primary": "#7D31AF",
-        "dark-secondary": "#B5BA72",
-        "dark-tertiary": "#99907D",
-        "dark-text": "#504B3F",
-
-        // Semantic Tokens (Used in app)
         bg: "var(--color-bg)",
         text: "var(--color-text)",
         primary: "var(--color-primary)",

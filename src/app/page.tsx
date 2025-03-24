@@ -1,11 +1,11 @@
 import Header from "./components/ui/Header";
-import StepRoadmap from "./components/ui/StepRoadmap";
+import StepRoadmap from "../app/components/ui/StepRoadmap";
 
 export default function HomePage() {
   return (
     <>
       <Header />
-      <main className="bg-dark-bg bg-dark-primary max-w-3xl mx-auto text-center py-10 px-4">
+      <main className="bg-bg bg-text-primary max-w-3xl mx-auto text-center py-10 px-4">
         <StepRoadmap current={1} />
 
         <div className="mt-10">

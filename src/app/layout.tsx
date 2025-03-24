@@ -1,6 +1,5 @@
 import "../styles/globals.css";
 import { ThemeProvider } from "next-themes";
-import { inter, firaCode, lato } from "./fonts";
 
 export const metadata = {
   title: "AI Handwriting App",
@@ -12,12 +11,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html
-      lang="en"
-      className={`${inter.variable} ${firaCode.variable} ${lato.variable}`}
-      suppressHydrationWarning
-    >
-      <body className="bg-light-bg text-light-text dark:bg-dark-bg dark:text-dark-text font-body transition-colors">
+    <html lang="en" className="dark" suppressHydrationWarning>
+      <body className="bg-bg text-text font-body">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           {children}
         </ThemeProvider>
