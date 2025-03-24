@@ -1,21 +1,13 @@
-import Header from "./components/ui/Header";
-import StepRoadmap from "../app/components/ui/StepRoadmap";
+import PageWrapper from "../components/ui/PageWrapper";
 
 export default function HomePage() {
   return (
-    <>
-      <Header />
-      <main className="bg-bg bg-text-primary max-w-3xl mx-auto text-center py-10 px-4">
-        <StepRoadmap current={1} />
-
-        <div className="mt-10">
-          <h1 className="font-monoHeading text-4xl mb-2">Hello</h1>
-          <p className="font-body text-base text-light-text dark:text-dark-text">
-            Upload a handwriting sample and we’ll turn it into a font you can
-            use anywhere.
-          </p>
-        </div>
-      </main>
-    </>
+    <PageWrapper>
+      <h1 className="text-primary text-3xl font-heading mb-4">PageWrapper</h1>
+      <p className="text-secondary text-base font-body">
+        Upload a handwriting sample and we’ll turn it into a font you can use
+        anywhere.
+      </p>
+    </PageWrapper>
   );
 }

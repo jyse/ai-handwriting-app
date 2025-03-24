@@ -1,15 +1,22 @@
-import { fontFamily } from "tailwindcss/defaultTheme";
-
 /** @type {import('tailwindcss').Config} */
-const config = {
-  // Enable dark mode based on the `class` on <html>
+const { fontFamily } = require("tailwindcss/defaultTheme");
+
+module.exports = {
+  // ✅ Enables class-based dark mode (required for next-themes)
   darkMode: "class",
-  content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
+
+  // ✅ Scans all relevant folders for Tailwind class usage
+  content: [
+    "./src/app/**/*.{js,ts,jsx,tsx}",
+    "./src/components/**/*.{js,ts,jsx,tsx}",
+    "./src/design-system/**/*.{js,ts,jsx,tsx}",
+    "./src/styles/**/*.{js,ts,jsx,tsx}"
+  ],
+
   theme: {
     extend: {
-      // Semantic design tokens using CSS variables
-      // These names (bg, text, primary...) are used as Tailwind classnames like `bg-bg`, `text-primary`
       colors: {
+        // Semantic tokens using CSS variables (defined in globals.css)
         bg: "var(--color-bg)",
         text: "var(--color-text)",
         primary: "var(--color-primary)",
@@ -17,7 +24,9 @@ const config = {
         tertiary: "var(--color-tertiary)"
       },
       fontFamily: {
+        // Monospace font for headings
         mono: ["var(--font-fira-code)", ...fontFamily.mono],
+        // Modern clean fonts for heading/body
         heading: ["var(--font-lato)", ...fontFamily.sans],
         body: ["var(--font-inter)", ...fontFamily.sans]
       },
@@ -27,7 +36,6 @@ const config = {
       }
     }
   },
+
   plugins: []
 };
-
-export default config;

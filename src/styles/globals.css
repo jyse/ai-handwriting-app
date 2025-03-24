@@ -1,25 +1,21 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 /* Light Theme (default) */
 :root {
-  --color-bg: #f7f7f7; /* Background color in light mode */
-  --color-text: #331e38; /* Main text color in light mode */
-  --color-primary: #17bebb; /* Accent color for icons, buttons */
-  --color-secondary: #706993; /* Secondary text or highlight */
-  --color-tertiary: #331e38; /* Tertiary color, default font */
+  --color-bg: #f7f7f7;
+  --color-text: #331e38;
+  --color-primary: #17bebb;
+  --color-secondary: #706993;
+  --color-tertiary: #331e38;
 }
 
 /* Dark Theme */
 html.dark {
-  --color-bg: #191923; /* Background color in dark mode */
-  --color-text: #99907d; /* Main text color in dark mode */
-  --color-primary: #7d31af; /* Accent color for icons, buttons */
-  --color-secondary: #b5ba72; /* Secondary text or highlight */
-  --color-tertiary: #99907d; /* Tertiary color, default font */
-}
-
-/* Apply the CSS variables using Tailwind classes */
-body {
-  @apply bg-bg text-text font-body;
+  --color-bg: #191923;
+  --color-text: #99907d;
+  --color-primary: #7d31af;
+  --color-secondary: #b5ba72;
+  --color-tertiary: #99907d;
 }

@@ -2,8 +2,8 @@
 "use client";
 
 import { useState } from "react";
-import UploadDropzone from "../components/ui/UploadDropzone";
-import ImagePreview from "../components/ui/ImagePreview";
+import UploadDropzone from "../../components/ui/UploadDropzone";
+import ImagePreview from "../../components/ui/ImagePreview";
 
 export default function UploadPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
