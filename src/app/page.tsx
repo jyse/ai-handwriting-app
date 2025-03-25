@@ -1,13 +1,14 @@
 import PageWrapper from "../components/ui/PageWrapper";
+import StepNavigation from "../components/ui/StepNavigation";
+import StepRoadmap from "../components/ui/StepRoadmap";
+import StepContent from "../components/ui/StepContent";
 
-export default function HomePage() {
+export default function Home() {
   return (
     <PageWrapper>
-      <h1 className="text-primary text-3xl font-heading mb-4">PageWrapper</h1>
-      <p className="text-secondary text-base font-body">
-        Upload a handwriting sample and we’ll turn it into a font you can use
-        anywhere.
-      </p>
+      <StepRoadmap />
+      <StepContent />
+      <StepNavigation />
     </PageWrapper>
   );
 }
