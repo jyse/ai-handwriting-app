@@ -9,6 +9,7 @@
   --color-primary: #17bebb;
   --color-secondary: #706993;
   --color-tertiary: #331e38;
+  --color-quartiary: #e112e8;
 }
 
 /* Dark Theme */
@@ -18,4 +19,5 @@ html.dark {
   --color-primary: #7d31af;
   --color-secondary: #b5ba72;
   --color-tertiary: #99907d;
+  --color-quartiary: #b369d8; /* lavender/magenta blend */
 }

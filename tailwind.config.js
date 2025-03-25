@@ -21,7 +21,8 @@ module.exports = {
         text: "var(--color-text)",
         primary: "var(--color-primary)",
         secondary: "var(--color-secondary)",
-        tertiary: "var(--color-tertiary)"
+        tertiary: "var(--color-tertiary)",
+        quartiary: "var(--color-quartiary)"
       },
       fontFamily: {
         // Monospace font for headings
