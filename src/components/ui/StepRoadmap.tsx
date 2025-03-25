@@ -13,7 +13,7 @@ const steps = [
 export default function StepRoadmap() {
   const { step } = useStepStore();
   return (
-    <div className="flex justify-center mb-6">
+    <div className="flex justify-center pb-6">
       {steps.map((s, index) => (
         <div key={s.number} className="flex items-center">
           <div

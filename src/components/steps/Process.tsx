@@ -1,6 +1,6 @@
 export default function Process() {
   return (
-    <div className="text-center mt-10">
+    <div className="text-center">
       <h2 className="text-2xl font-heading text-primary">
         Step 2: OCR Processing
       </h2>

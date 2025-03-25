@@ -6,7 +6,7 @@ export default function StepNavigation() {
   const { step, nextStep, prevStep } = useStepStore();
 
   return (
-    <div className="mt-10 flex justify-between items-center w-full max-w-md mx-auto px-4">
+    <div className="flex justify-between items-center w-full max-w-md mx-auto px-4">
       {step > 1 ? (
         <button
           onClick={prevStep}
