@@ -7,6 +7,10 @@ export default function Download() {
       <p className="text-secondary mt-2">
         Download your font and use it anywhere!
       </p>
+      <p>
+        ✅ “I confirm this handwriting is mine or I have the rights to use it.”
+        ✅ “I take responsibility for font usage.”
+      </p>
     </div>
   );
 }

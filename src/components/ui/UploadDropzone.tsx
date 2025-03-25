@@ -1,23 +1,22 @@
 "use client";
-
 import { useRef } from "react";
+import { useUploadStore } from "../../state/useUploadStore";
 
-interface UploadDropzoneProps {
-  onFileSelected: (file: File, previewUrl: string) => void;
-}
-
-export default function UploadDropzone({
-  onFileSelected
-}: UploadDropzoneProps) {
+export default function UploadDropzone() {
   const inputRef = useRef<HTMLInputElement>(null);
+  const setFile = useUploadStore((s) => s.setFile);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      alert("Please upload a valid image file (PNG or JPG).");
+      return;
+    }
 
     const reader = new FileReader();
     reader.onloadend = () => {
-      onFileSelected(file, reader.result as string);
+      setFile(file, reader.result as string);
     };
     reader.readAsDataURL(file);
   };
@@ -25,10 +24,10 @@ export default function UploadDropzone({
   return (
     <div
       onClick={() => inputRef.current?.click()}
-      className="border-dashed border-2 border-gray-300 rounded-xl p-6 text-center cursor-pointer hover:bg-gray-50"
+      className="border-dashed border-2 border-secondary/50 rounded-xl p-6 text-center cursor-pointer hover:bg-secondary/10 transition"
     >
-      <p className="text-gray-600">
-        Click to upload a handwriting image (PNG or JPG)
+      <p className="text-tertiary text-sm">
+        Click or drag to upload a handwriting image (.png or .jpg)
       </p>
       <input
         type="file"
