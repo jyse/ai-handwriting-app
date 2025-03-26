@@ -45,3 +45,17 @@ CSS var `--color-bg` → changes based on light/dark mode
     ↓
 Final result: background color updates instantly across the app
 ```
+
+[ Upload Image ]
+|
+↓
+[ Process Step (OCR + validation) ]
+|
+↓
+[ Preview Step (show extracted letters) ]
+|
+↓
+[ Customize Step (rename font, choose format) ]
+|
+↓
+[ Download Step (get .ttf file) ]

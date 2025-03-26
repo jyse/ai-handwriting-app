@@ -42,8 +42,8 @@ export default function Upload() {
             </ul>
           </div>
           <p className="text-sm text-quartiary italic">
-            🧠 Looks like a clean sample! Our AI will analyze this in the next
-            step.
+            🧠 Check if it is a clean sample! Our AI will analyze this in the
+            next step.
           </p>
 
           <Image
