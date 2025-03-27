@@ -12,6 +12,7 @@ export default function Upload() {
     <section className="flex flex-col gap-6 items-center text-center max-w-xl mx-auto px-4">
       <h1 className="text-3xl font-heading text-primary">
         Step 1: Upload Handwriting
+        Konnichiwa
       </h1>
 
       {!previewUrl ? (
