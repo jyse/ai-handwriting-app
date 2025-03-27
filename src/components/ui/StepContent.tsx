@@ -1,6 +1,6 @@
 "use client";
 import { useStepStore } from "../../state/useStepStore";
-import Upload from "../steps/Upload";
+import Upload from "../steps/upload/Upload";
 import Process from "../steps/Process";
 import Preview from "../steps/Preview";
 import Customize from "../steps/Customize";
@@ -14,11 +14,11 @@ export default function StepContent() {
       return <Upload />;
     case 2:
       return <Process />;
-    case 3:
-      return <Preview />;
-    case 4:
-      return <Customize />;
-    case 5:
+    // case 3:
+    //   return <Preview />;
+    // case 4:
+    //   return <Customize />;
+    // case 5:
       return <Download />;
     default:
       return <Upload />;

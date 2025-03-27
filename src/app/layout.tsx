@@ -2,6 +2,7 @@ import "../styles/globals.css";
 import { ThemeProvider } from "next-themes";
 import Header from "../components/ui/Header";
 import Footer from "../components/ui/Footer";
+import ThemedToaster from "../components/ui/ThemedToaster";
 
 export const metadata = {
   title: "AI Handwriting App",
@@ -16,6 +17,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className="bg-bg text-text font-body">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <ThemedToaster/>
           <div className="min-h-screen flex flex-col">
             <Header />
             <main className="min-h-screen">{children}</main>
