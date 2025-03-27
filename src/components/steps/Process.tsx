@@ -6,17 +6,19 @@ import { motion } from "framer-motion";
 
 export default function Process() {
   const file = useUploadStore((s) => s.file);
+  const setResult = useUploadStore((s) => s.setResult);
+  const setError = useUploadStore((s) => s.setError);
   const nextStep = useStepStore((s) => s.nextStep);
 
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [status, setStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
 
   useEffect(() => {
-    const processImage = async () => {
-      if (!file || loading) return;
+    if (!file) return;
 
-      setLoading(true);
-      setSuccess(false);
+    const processImage = async () => {
+      setStatus("loading");
 
       const formData = new FormData();
       formData.append("image", file);
@@ -28,19 +30,20 @@ export default function Process() {
         });
 
         const data = await res.json();
-        console.log("✅ AI Output:", data);
 
-        setSuccess(true);
-
-        // Optional: Save data.letters to Zustand for later use.
-        setTimeout(() => {
-          nextStep(); // Auto go to Preview
-        }, 1200);
-      } catch (err) {
-        console.error("❌ Error processing image:", err);
-        alert("Something went wrong while processing your handwriting.");
-      } finally {
-        setLoading(false);
+        if (data?.letters) {
+          setResult(data.letters);
+          setStatus("success");
+          setTimeout(() => {
+            nextStep();
+          }, 1200);
+        } else {
+          throw new Error(data?.error || "No letters returned");
+        }
+      } catch (err: any) {
+        console.error("❌ OCR error:", err.message);
+        setError(err.message || "Unknown error");
+        setStatus("error");
       }
     };
 
@@ -53,22 +56,21 @@ export default function Process() {
         Step 2: Processing Handwriting
       </h1>
 
-      <p className="text-secondary max-w-md">
-        We’re using AI to analyze your handwriting and extract the letters. This
-        only takes a moment...
-      </p>
-
-      {loading && (
+      {status === "loading" && (
         <motion.p
-          className="text-quartiary text-sm italic"
+          className="text-secondary text-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
         >
-          🔍 Analyzing your handwriting...
+          🧠 Analyzing handwriting…
+          <br />
+          ✍️ Extracting letters…
+          <br />
+          🔍 Checking for missing characters…
         </motion.p>
       )}
 
-      {success && (
+      {status === "success" && (
         <motion.p
           className="text-green-500 text-sm"
           initial={{ opacity: 0 }}
@@ -76,6 +78,12 @@ export default function Process() {
         >
           ✅ Handwriting processed successfully! Moving to next step...
         </motion.p>
+      )}
+
+      {status === "error" && (
+        <p className="text-quartiary text-sm mt-4">
+          ❌ Something went wrong. Please go back and try a different image.
+        </p>
       )}
     </section>
   );
