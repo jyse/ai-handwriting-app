@@ -4,20 +4,20 @@
 
 /* Light Theme (default) */
 :root {
-  --color-bg: #f7f7f7;
-  --color-text: #331e38;
-  --color-primary: #17bebb;
-  --color-secondary: #706993;
-  --color-tertiary: #331e38;
-  --color-quartiary: #e112e8;
+  --color-bg: #f2f2f2; /* Slightly more contrast than pure white */
+  --color-text: #231627; /* Deep eggplant — bolder version of #331e38 */
+  --color-primary: #17bebb; /* keep! bright, fresh, unique */
+  --color-secondary: #5d5388; /* better for contrast, still elegant */
+  --color-tertiary: #231627; /* match text for subtle elements */
+  --color-quartiary: #cf10c6; /* slightly darker for better contrast */
 }
 
 /* Dark Theme */
 html.dark {
   --color-bg: #191923;
-  --color-text: #99907d;
+  --color-text: #eee2cb;
   --color-primary: #7d31af;
-  --color-secondary: #b5ba72;
-  --color-tertiary: #99907d;
-  --color-quartiary: #b369d8; /* lavender/magenta blend */
+  --color-secondary: #c3cb5f;
+  --color-tertiary: #afa387;
+  --color-quartiary: #f408f4; /* lavender/magenta blend */
 }

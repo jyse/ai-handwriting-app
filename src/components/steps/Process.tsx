@@ -16,7 +16,7 @@ export default function Process() {
     setMissingLetters,
     setComplete,
     setProcessingPhase,
-    reset: resetProcess,
+    reset: resetProcess
   } = useProcessStore();
 
   useEffect(() => {
@@ -31,7 +31,7 @@ export default function Process() {
       try {
         const res = await fetch("/api/process", {
           method: "POST",
-          body: formData,
+          body: formData
         });
 
         const data = await res.json();
@@ -41,28 +41,26 @@ export default function Process() {
         }
 
         setOCRResult(data.letters);
-        setProcessingPhase("checking")
+        setProcessingPhase("checking");
 
         setTimeout(() => {
-
-
           if (data.isComplete) {
             setComplete(true);
             setProcessingPhase("done");
-            toast.success("✅ Font contains all required characters!");
+            toast("✅ Font contains all required characters!");
             setTimeout(() => nextStep(), 1200);
           } else {
             setComplete(false);
             setMissingLetters(data.missing || []);
             setProcessingPhase("done");
-            toast.error("⚠️ Some characters are missing.");
+            toast("⚠️ Some characters are missing.");
           }
-        }, 800)
+        }, 800);
       } catch (err: any) {
         console.error("❌ AI error:", err.message);
         resetProcess(); // optional: wipe process state
         setProcessingPhase("idle");
-        toast.error("Something went wrong during processing.");
+        toast("Something went wrong during processing.");
       }
     };
 
@@ -70,7 +68,7 @@ export default function Process() {
   }, [file]);
 
   const processingPhase = useProcessStore((s) => s.processingPhase);
-  const isComplete = useProcessStore((s) => s.isComplete)
+  const isComplete = useProcessStore((s) => s.isComplete);
   const missingLetters = useProcessStore((s) => s.missingLetters);
 
   return (
@@ -80,39 +78,57 @@ export default function Process() {
       </h1>
 
       {processingPhase === "ocr" && (
-        <motion.p className="text-secondary text-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+        <motion.p
+          className="text-secondary text-sm"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
           🧠 Analyzing handwriting sample and extracting characters…
         </motion.p>
       )}
 
       {processingPhase === "checking" && (
-        <motion.p className="text-secondary text-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+        <motion.p
+          className="text-secondary text-sm"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
           🔍 Checking if all required characters are present…
         </motion.p>
       )}
 
       {processingPhase === "done" && isComplete && (
-        <motion.p className="text-green-500 text-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+        <motion.p
+          className="text-green-500 text-sm"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
           ✅ All characters are present! Moving to preview...
         </motion.p>
-
       )}
 
       {processingPhase === "done" && !isComplete && (
         <motion.div
-          className="text-yellow-400 text-sm flex flex-col items-center gap-4"
+          className="text-secondary text-sm flex flex-col items-center gap-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
         >
-          ⚠️ Your sample is missing some characters. You can upload a new image or let AI generate the rest in your style.
+          ⚠️ Your sample is missing some characters. You can upload a new image
+          or let AI generate the rest in your style.
           {missingLetters.length > 0 && (
-            <ul className="text-sm text-muted-foreground grid grid-cols-4 gap-2 mt-2">
+            <ul className="text-quartiary font-medium text-muted-foreground grid grid-cols-4 gap-2 mt-2">
               {missingLetters.map((char) => (
                 <li
                   key={char}
-                  className="bg-muted rounded px-2 py-1 text-center border border-dashed"
+                  className="bg-muted rounded px-2 py-1 text-center border-dashed border-primary border-[2px]"
                 >
-                  {char === " " ? <span className="italic text-xs text-muted-foreground">[space]</span> : char}
+                  {char === " " ? (
+                    <span className="italic text-xs text-muted-foreground">
+                      [space]
+                    </span>
+                  ) : (
+                    char
+                  )}
                 </li>
               ))}
             </ul>
